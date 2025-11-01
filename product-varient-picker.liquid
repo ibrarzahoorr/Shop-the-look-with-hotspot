@@ -1,0 +1,429 @@
+{%- comment -%}
+  Color Circles & Size Dropdown
+{%- endcomment -%}
+
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign has_size_option = false
+  assign has_color_option = false
+  
+  for option in product.options_with_values
+    if option.name == 'Size'
+      assign has_size_option = true
+      assign size_option = option
+      assign size_option_index = forloop.index0
+    elsif option.name == 'Color'
+      assign has_color_option = true
+      assign color_option = option
+      assign color_option_index = forloop.index0
+    endif
+  endfor
+-%}
+
+<style>
+  .custom-variant-picker {
+    margin: 20px 0;
+  }
+  
+  /* COLOR SECTION - CIRCLES */
+  .color-section {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .color-heading {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #000;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .color-boxes {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  
+  .color-box-wrapper {
+    position: relative;
+  }
+  
+  .color-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .color-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border: 3px solid #d0d0d0;
+    border-radius: 50%;
+    cursor: pointer;
+    background: #cccccc;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  .color-box:hover {
+    border-color: #000;
+    transform: scale(1.1);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  }
+  
+  {% comment %} .color-input:checked + .color-box {
+    border-color: #000;
+    border-width: 4px;
+  }
+  
+  .color-input:checked + .color-box::after {
+    content: '✓';
+    position: absolute;
+    font-size: 20px;
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 0 0 3px rgba(0,0,0,0.5);
+  } {% endcomment %}
+  
+  .color-input:disabled + .color-box {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  
+  .color-input:disabled + .color-box::before {
+    content: '';
+    position: absolute;
+    width: 2px;
+    height: 60px;
+    background: #999;
+    transform: rotate(45deg);
+  }
+  
+  .color-input:disabled + .color-box:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: #d0d0d0;
+  }
+  
+  /* Individual Color Mapping */
+  .color-box[data-color*="red"] {
+    background: #DC143C;
+  }
+  
+  .color-box[data-color*="black"] {
+    background: #000000;
+  }
+  
+  .color-box[data-color*="green"] {
+    background: #228B22;
+  }
+  
+  .color-box[data-color*="brown"] {
+    background: #8B4513;
+  }
+  
+  .color-box[data-color*="white"] {
+    background: #FFFFFF;
+    border-color: #999;
+  }
+  
+  .color-box[data-color*="blue"] {
+    background: #0066CC;
+  }
+  
+  .color-box[data-color*="navy"] {
+    background: #000080;
+  }
+  
+  .color-box[data-color*="gray"],
+  .color-box[data-color*="grey"] {
+    background: #808080;
+  }
+  
+  .color-box[data-color*="pink"] {
+    background: #FFC0CB;
+  }
+  
+  .color-box[data-color*="yellow"] {
+    background: #FFD700;
+  }
+  
+  .color-box[data-color*="orange"] {
+    background: #FF8C00;
+  }
+  
+  .color-box[data-color*="purple"] {
+    background: #800080;
+  }
+  
+  .color-box[data-color*="beige"],
+  .color-box[data-color*="cream"] {
+    background: #F5F5DC;
+  }
+  
+  .color-box[data-color*="tan"] {
+    background: #D2B48C;
+  }
+  
+  .color-box[data-color*="stone"] {
+    background: #D4C4B0;
+  }
+  
+  .color-box[data-color*="olive"] {
+    background: #808000;
+  }
+  
+  .color-box[data-color*="maroon"] {
+    background: #800000;
+  }
+  
+  .color-box[data-color*="burgundy"] {
+    background: #8B0000;
+  }
+  
+  .color-box[data-color*="khaki"] {
+    background: #C3B091;
+  }
+  
+  .color-box[data-color*="silver"] {
+    background: #C0C0C0;
+  }
+  
+  .color-box[data-color*="gold"] {
+    background: #FFD700;
+  }
+  
+  .color-box[data-color*="turquoise"] {
+    background: #40E0D0;
+  }
+  
+  .color-box[data-color*="teal"] {
+    background: #008080;
+  }
+  
+  .color-box[data-color*="mint"] {
+    background: #98FF98;
+  }
+  
+  .color-box[data-color*="coral"] {
+    background: #FF7F50;
+  }
+  
+  .color-box[data-color*="peach"] {
+    background: #FFE5B4;
+  }
+  
+  .color-box[data-color*="lavender"] {
+    background: #E6E6FA;
+  }
+  
+  /* White color ka checkmark black */
+  .color-box[data-color*="white"] + .color-input:checked ~ .color-box::after,
+  .color-input:checked + .color-box[data-color*="white"]::after {
+    color: #000;
+  }
+  
+  /* SIZE DROPDOWN */
+  .size-section {
+    margin-top: 30px;
+  }
+  
+  .size-heading {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #000;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .size-dropdown {
+    width: 100%;
+    max-width: 400px;
+    padding: 14px 16px;
+    border: 2px solid #d0d0d0;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #333;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 45px;
+  }
+  
+  .size-dropdown:hover {
+    border-color: #666;
+  }
+  
+  .size-dropdown:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.1);
+  }
+  
+  /* Mobile */
+  @media (max-width: 768px) {
+    .color-box {
+      width: 45px;
+      height: 45px;
+    }
+    
+    .size-dropdown {
+      font-size: 14px;
+      padding: 12px 14px;
+    }
+    
+    .color-heading,
+    .size-heading {
+      font-size: 15px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .color-box {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .size-dropdown {
+      font-size: 13px;
+      padding: 11px 13px;
+    }
+  }
+</style>
+
+<div class="custom-variant-picker">
+  
+  {%- if has_color_option -%}
+    <!-- COLOR CIRCLES -->
+    <div class="color-section">
+      <div class="color-heading">COLOUR: {{ current_variant.options[color_option_index] | upcase }}</div>
+      <div class="color-boxes">
+        {%- for value in color_option.values -%}
+          {%- liquid
+            assign color_available = false
+            for variant in product.variants
+              if variant.options[color_option_index] == value and variant.available
+                assign color_available = true
+                break
+              endif
+            endfor
+            
+            assign is_selected = false
+            if current_variant.options[color_option_index] == value
+              assign is_selected = true
+            endif
+          -%}
+          
+          <div class="color-box-wrapper">
+            <input 
+              type="radio"
+              id="color-{{ section.id }}-{{ value | handleize }}"
+              class="color-input variant-option"
+              name="color-option"
+              value="{{ value }}"
+              data-option-index="{{ color_option_index }}"
+              {% if is_selected %}checked{% endif %}
+              {% unless color_available %}disabled{% endunless %}
+            >
+            <label for="color-{{ section.id }}-{{ value | handleize }}" class="color-box" data-color="{{ value | handleize }}" title="{{ value }}">
+            </label>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  {%- endif -%}
+  
+  {%- if has_size_option -%}
+    <!-- SIZE DROPDOWN -->
+    <div class="size-section">
+      <div class="size-heading">SIZE:</div>
+      <select class="size-dropdown variant-option" name="size-option" data-option-index="{{ size_option_index }}">
+        <option value="" disabled>Please select</option>
+        {%- for value in size_option.values -%}
+          {%- liquid
+            assign size_available = false
+            for variant in product.variants
+              if variant.options[size_option_index] == value and variant.available
+                assign size_available = true
+                break
+              endif
+            endfor
+            
+            assign is_selected = false
+            if current_variant.options[size_option_index] == value
+              assign is_selected = true
+            endif
+          -%}
+          
+          <option 
+            value="{{ value }}"
+            {% if is_selected %}selected{% endif %}
+            {% unless size_available %}disabled{% endunless %}
+          >
+            {{ value }}{% unless size_available %} - Out of Stock{% endunless %}
+          </option>
+        {%- endfor -%}
+      </select>
+    </div>
+  {%- endif -%}
+  
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const variantOptions = document.querySelectorAll('.custom-variant-picker .variant-option');
+    
+    function updateVariant() {
+      const selectedSize = document.querySelector('.size-dropdown')?.value;
+      const selectedColor = document.querySelector('.color-input:checked')?.value;
+      
+      const productVariants = {{ product.variants | json }};
+      const matchingVariant = productVariants.find(variant => {
+        let matches = true;
+        
+        {% if has_size_option %}
+          if (variant.options[{{ size_option_index }}] !== selectedSize) matches = false;
+        {% endif %}
+        
+        {% if has_color_option %}
+          if (variant.options[{{ color_option_index }}] !== selectedColor) matches = false;
+        {% endif %}
+        
+        return matches;
+      });
+      
+      if (matchingVariant) {
+        const productForm = document.getElementById('{{ product_form_id }}');
+        if (productForm) {
+          const mainVariantSelector = productForm.querySelector('select[name="id"], input[name="id"]');
+          if (mainVariantSelector) {
+            mainVariantSelector.value = matchingVariant.id;
+            mainVariantSelector.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        }
+        
+        const url = new URL(window.location);
+        url.searchParams.set('variant', matchingVariant.id);
+        window.history.replaceState({}, '', url);
+      }
+    }
+    
+    variantOptions.forEach(input => {
+      input.addEventListener('change', updateVariant);
+    });
+  });
+</script>
