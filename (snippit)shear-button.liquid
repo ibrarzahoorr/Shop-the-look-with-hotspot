@@ -1,0 +1,127 @@
+{%- if settings.share_on_facebook or settings.share_on_x or settings.share_on_pinterest or settings.copy_link -%}
+  {%- liquid
+    assign uppercase_text = false
+    if block.settings.text_style == 'section-heading' and settings.uppercase_section_headings
+        assign uppercase_text = true
+    elsif block.settings.text_style == 'secondary-heading' and settings.uppercase_secondary_headings
+      assign uppercase_text = true
+    elsif block.settings.text_style == 'subheading-font' and settings.uppercase_subheadings
+        assign uppercase_text = true
+    elsif block.settings.text_style == 'body-font' and settings.uppercase_body
+        assign uppercase_text = true
+    elsif block.settings.text_style == 'caption-font' and settings.uppercase_caption
+        assign uppercase_text = true
+    endif
+-%}
+{% if template.name == 'article' %}<div class="side-margins {{ section.settings.grid_style }}-grid {% if disable_max_width %}disable-max-width{% endif %}" {{ block.shopify_attributes }}>{% endif %}
+<div class="article__share share {{ block.settings.text_style }}{% if uppercase_text %} uppercase{% endif %}{% if template.name == 'article' %} {{ content_width }}{% endif %}
+  {% if block.settings.text_style == 'subheading-font' and settings.use_heading_font_subheadings %} subheading-heading-font{% endif %}"
+  style="--spacing: {{ block.settings.top_spacing }};--mobile-spacing: {{ block.settings.mobile_top_spacing }};" {% unless template.name == 'article' %}{{ block.shopify_attributes }}{% endunless %}>
+  
+  {%- comment -%} Single Universal Share Button {%- endcomment -%}
+  <div class="share-button-container">
+    <button 
+      id="universal-share-btn-{{ section.id }}" 
+      class="universal-share-btn share-list__link" 
+      type="button"
+      data-url="{{ share_variant_url | default: share_link | prepend: request.origin }}"
+      data-title="{{ share_title }}"
+      data-text="{{ share_title | url_param_escape }}">
+      <span class="share-list__icon icon--large">
+        {%- render 'icons-social-media', icon: 'share' -%}
+      </span>
+      {% unless block.settings.show_only_icons %}
+        <span class="share-button-label" aria-hidden="true">
+          {% if block.settings.text_style == 'subheading-font' and settings.bolder_subheadings_font %}<b>{% endif %}
+          {{ 'general.share.share_button' | t }}
+          {% if block.settings.text_style == 'subheading-font' and settings.bolder_subheadings_font %}</b>{% endif %}
+        </span>
+        <span class="copy-success-message" style="display: none;">
+          {% if block.settings.text_style == 'subheading-font' and settings.bolder_subheadings_font %}<b>{% endif %}
+          {{ 'general.share.copied_message' | t }}
+          {% if block.settings.text_style == 'subheading-font' and settings.bolder_subheadings_font %}</b>{% endif %}
+        </span>
+      {% endunless %}
+    </button>
+  </div>
+
+  <script>
+    (function() {
+      const shareBtn = document.getElementById('universal-share-btn-{{ section.id }}');
+      
+      if (shareBtn) {
+        shareBtn.addEventListener('click', async function() {
+          const url = this.getAttribute('data-url');
+          const title = this.getAttribute('data-title');
+          const text = this.getAttribute('data-text');
+          
+          // Check if Web Share API is available (mobile devices)
+          if (navigator.share) {
+            try {
+              await navigator.share({
+                title: title,
+                text: text,
+                url: url
+              });
+              console.log('Share successful');
+            } catch (error) {
+              // User cancelled or error occurred
+              console.log('Share failed or cancelled:', error);
+            }
+          } else {
+            // Fallback to copy to clipboard (desktop)
+            try {
+              await navigator.clipboard.writeText(url);
+              
+              // Show success message
+              const label = this.querySelector('.share-button-label');
+              const successMsg = this.querySelector('.copy-success-message');
+              
+              if (label) label.style.display = 'none';
+              if (successMsg) successMsg.style.display = 'inline-block';
+              
+              setTimeout(() => {
+                if (label) label.style.display = 'inline-block';
+                if (successMsg) successMsg.style.display = 'none';
+              }, 1600);
+            } catch (error) {
+              console.error('Copy failed:', error);
+              alert('کاپی نہیں ہو سکا۔ براہ کرم دوبارہ کوشش کریں۔');
+            }
+          }
+        });
+      }
+    })();
+  </script>
+
+  <style>
+    .universal-share-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: 1px solid currentColor;
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    
+    .universal-share-btn:hover {
+      opacity: 0.8;
+    }
+    
+    .share-button-container {
+      display: flex;
+      justify-content: flex-start;
+      width: 100%;
+    }
+    
+    .copy-success-message {
+      color: #28a745;
+    }
+  </style>
+
+</div>
+{% if template.name == 'article' %}</div>{% endif %}
+{%- endif -%}
